@@ -40,6 +40,8 @@ public class IOSDeviceLaunchConfigurationDelegate extends AbstractLaunchConfigur
             RoboVMPlugin.PLUGIN_ID + ".IOS_DEVICE_SIGNING_ID";
     public static final String ATTR_IOS_DEVICE_PROVISIONING_PROFILE = 
             RoboVMPlugin.PLUGIN_ID + ".IOS_DEVICE_PROVISIONING_PROFILE";
+    public static final String ATTR_IOS_DEVICE_SKIP_SIGNING =
+            RoboVMPlugin.PLUGIN_ID + ".IOS_DEVICE_SKIP_SIGNING";
 
     @Override
     protected Arch getArch(ILaunchConfiguration configuration, String mode) {
@@ -56,15 +58,21 @@ public class IOSDeviceLaunchConfigurationDelegate extends AbstractLaunchConfigur
             ILaunchConfiguration configuration, String mode) throws IOException, CoreException {
         
         configBuilder.targetType(TargetType.ios);
-        String signingId = configuration.getAttribute(ATTR_IOS_DEVICE_SIGNING_ID, (String) null);
-        String profile = configuration.getAttribute(ATTR_IOS_DEVICE_PROVISIONING_PROFILE, (String) null);
-        if (signingId != null) {
-            configBuilder.iosSignIdentity(SigningIdentity.find(SigningIdentity.list(), signingId));
+
+        boolean skipSigning = configuration.getAttribute(ATTR_IOS_DEVICE_SKIP_SIGNING, false);
+        if (skipSigning){
+            configBuilder.iosSkipSigning(true);
+        }else {
+            String signingId = configuration.getAttribute(ATTR_IOS_DEVICE_SIGNING_ID, (String) null);
+            String profile = configuration.getAttribute(ATTR_IOS_DEVICE_PROVISIONING_PROFILE, (String) null);
+            if (signingId != null) {
+                configBuilder.iosSignIdentity(SigningIdentity.find(SigningIdentity.list(), signingId));
+            }
+            if (profile != null) {
+                configBuilder.iosProvisioningProfile(ProvisioningProfile.find(ProvisioningProfile.list(), profile));
+            }
         }
-        if (profile != null) {
-            configBuilder.iosProvisioningProfile(ProvisioningProfile.find(ProvisioningProfile.list(), profile));
-        }
-        
+
         return configBuilder.build();
     }
 }

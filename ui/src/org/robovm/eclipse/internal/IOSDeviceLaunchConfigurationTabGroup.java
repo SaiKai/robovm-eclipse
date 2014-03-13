@@ -66,9 +66,10 @@ public class IOSDeviceLaunchConfigurationTabGroup extends AbstractLaunchConfigur
         }
         
         private String[] readSigningIdentities() {
-            String[] result = new String[signingIdentities.size() + 1];
+            String[] result = new String[signingIdentities.size() + 2];
             int i = 0;
             result[i++] = "Auto (starts with 'iPhone Developer')";
+            result[i++] = "Skip Signing";
             for (SigningIdentity sid : signingIdentities) {
                 result[i++] = sid.getName();
             }
@@ -114,6 +115,11 @@ public class IOSDeviceLaunchConfigurationTabGroup extends AbstractLaunchConfigur
                 @Override
                 public void widgetSelected(SelectionEvent event) {
                     updateLaunchConfigurationDialog();
+                    if (signingIdCombo.getSelectionIndex() == 1){
+                        profileCombo.setEnabled(false);
+                    }else {
+                        profileCombo.setEnabled(true);
+                    }
                 }
             });
 
@@ -185,13 +191,21 @@ public class IOSDeviceLaunchConfigurationTabGroup extends AbstractLaunchConfigur
         public void performApply(ILaunchConfigurationWorkingCopy wc) {
             super.performApply(wc);
             int signingIdIndex = signingIdCombo.getSelectionIndex();
-            SigningIdentity signingId = signingIdIndex == 0 ? null : signingIdentities.get(signingIdIndex - 1);
-            wc.setAttribute(IOSDeviceLaunchConfigurationDelegate.ATTR_IOS_DEVICE_SIGNING_ID, 
-                    signingId != null ? signingId.getFingerprint() : null);
-            int profileIndex = profileCombo.getSelectionIndex();
-            ProvisioningProfile profile = profileIndex == 0 ? null : provisioningProfiles.get(profileIndex - 1);
-            wc.setAttribute(IOSDeviceLaunchConfigurationDelegate.ATTR_IOS_DEVICE_PROVISIONING_PROFILE, 
-                    profile != null ? profile.getUuid() : null);
+
+            if (signingIdIndex == 1){
+                wc.setAttribute(IOSDeviceLaunchConfigurationDelegate.ATTR_IOS_DEVICE_SKIP_SIGNING,
+                        true);
+            }else{
+                SigningIdentity signingId = signingIdIndex == 0 ? null : signingIdentities.get(signingIdIndex - 1);
+                wc.setAttribute(IOSDeviceLaunchConfigurationDelegate.ATTR_IOS_DEVICE_SIGNING_ID,
+                        signingId != null ? signingId.getFingerprint() : null);
+                int profileIndex = profileCombo.getSelectionIndex();
+                ProvisioningProfile profile = profileIndex == 0 ? null : provisioningProfiles.get(profileIndex - 1);
+                wc.setAttribute(IOSDeviceLaunchConfigurationDelegate.ATTR_IOS_DEVICE_PROVISIONING_PROFILE,
+                        profile != null ? profile.getUuid() : null);
+                wc.setAttribute(IOSDeviceLaunchConfigurationDelegate.ATTR_IOS_DEVICE_SKIP_SIGNING,
+                        false);
+            }
         }
 
         @Override
@@ -199,6 +213,7 @@ public class IOSDeviceLaunchConfigurationTabGroup extends AbstractLaunchConfigur
             super.setDefaults(wc);
             wc.setAttribute(IOSDeviceLaunchConfigurationDelegate.ATTR_IOS_DEVICE_SIGNING_ID, (String) null);
             wc.setAttribute(IOSDeviceLaunchConfigurationDelegate.ATTR_IOS_DEVICE_SIGNING_ID, (String) null);
+            wc.setAttribute(IOSDeviceLaunchConfigurationDelegate.ATTR_IOS_DEVICE_SKIP_SIGNING, false);
         }
         
     }
